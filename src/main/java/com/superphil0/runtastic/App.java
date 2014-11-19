@@ -10,8 +10,11 @@ import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -34,13 +37,13 @@ public class App
     public static void main( String[] args )
     {
     	RequestHandler handler = new RequestHandler();
-    	List<Activity> activities = handler.getActivitiesOfUser("USERNAME","passwort");
+    	List<Activity> activities = handler.getActivitiesOfUser("EMAIL","PASSWORD");
     	client = new OkHttpClient();
 		CookieManager cookieManager = new CookieManager();
 		cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 		client.setCookieHandler(cookieManager);
-		RequestBody body = new FormEncodingBuilder().add("j_username", "USERNAME")
-				.add("j_password", "PASSWORT").build();
+		RequestBody body = new FormEncodingBuilder().add("j_username", "EMAIL")
+				.add("j_password", "PASSWORD").build();
 		Request request = new Request.Builder().url("http://www.laufliga.net/Laufen/j_spring_security_check").post(body)
 				.build();
 		
@@ -75,7 +78,16 @@ public class App
     	DateTimeFormatter durationFormat = DateTimeFormat.forPattern("HH:mm:ss");
     	long duration = Long.parseLong(activity.getDuration());
     	String dateStr = dateFormat.print(date);
-    	String durationStr = durationFormat.print(duration);
+    	Period period = new Duration(duration).toPeriod();
+    	PeriodFormatter dur = new PeriodFormatterBuilder()
+    	     .printZeroAlways()
+    	     .appendHours()
+    	     .appendSeparator(":")
+    	     .appendMinutes()
+    	     .appendSeparator(":")
+    	     .appendSeconds()
+    	     .toFormatter();
+    	String durationStr = dur.print(period);
 		RequestBody body = new FormEncodingBuilder()
 			.add("Trainingseinheit:Eintrag", "Trainingseinheit:Eintrag")
 			.add("Trainingseinheit:Eintrag:Datum",dateStr)
