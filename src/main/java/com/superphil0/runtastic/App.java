@@ -34,16 +34,20 @@ import com.superphil0.runtasticapi.RequestHandler;
 public class App 
 {
 	private static OkHttpClient client;
+	private static String email = "EMAIl";
+	private static String pwRuntastic = "PASSWORD";
+	private static String pwLaufliga = "PASSWORD";
+	
     public static void main( String[] args )
     {
     	RequestHandler handler = new RequestHandler();
-    	List<Activity> activities = handler.getActivitiesOfUser("EMAIL","PASSWORD");
+    	List<Activity> activities = handler.getActivitiesOfUser(email,pwRuntastic);
     	client = new OkHttpClient();
 		CookieManager cookieManager = new CookieManager();
 		cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 		client.setCookieHandler(cookieManager);
-		RequestBody body = new FormEncodingBuilder().add("j_username", "EMAIL")
-				.add("j_password", "PASSWORD").build();
+		RequestBody body = new FormEncodingBuilder().add("j_username", email)
+				.add("j_password", pwLaufliga).build();
 		Request request = new Request.Builder().url("http://www.laufliga.net/Laufen/j_spring_security_check").post(body)
 				.build();
 		
@@ -64,7 +68,8 @@ public class App
 		String token = document.select("input[id=j_id1:javax.faces.ViewState:0]").first().val();
 		for(Activity a : activities)
 		{
-			saveActivityToLaufliga(a, token);
+			if(Integer.parseInt(a.getDistance()) > 4000)
+				saveActivityToLaufliga(a, token);
 		}
 		// text/html,application/xhtml+xml,application/xml;
     	
@@ -73,14 +78,15 @@ public class App
     {
     	Date d = activity.getDate().getDate();
     	d.setYear(d.getYear()-1900);
+    	d.setMonth(d.getMonth()-1);
     	DateTime date = new DateTime(d);
     	DateTimeFormatter dateFormat = DateTimeFormat.forPattern("dd.MM.YYYY");
-    	DateTimeFormatter durationFormat = DateTimeFormat.forPattern("HH:mm:ss");
     	long duration = Long.parseLong(activity.getDuration());
     	String dateStr = dateFormat.print(date);
     	Period period = new Duration(duration).toPeriod();
     	PeriodFormatter dur = new PeriodFormatterBuilder()
     	     .printZeroAlways()
+    	     .minimumPrintedDigits(2)
     	     .appendHours()
     	     .appendSeparator(":")
     	     .appendMinutes()
